@@ -127,6 +127,7 @@ class Reactor final : public BusyPollingLoop {
   int postPendingRecvs();
   int postPendingSends();
 
+  std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cq_entries;
 
   // void postRecvRequests(int num);
 

@@ -114,7 +114,6 @@ Reactor::~Reactor() {
 }
 
 bool Reactor::pollOnce() {
-  std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cq_entries;
   std::array<fi_addr_t, kNumPolledWorkCompletions> src_addrs;
 
   postPendingSends();
