@@ -73,11 +73,9 @@ TP_REGISTER_CREATOR(
 
 std::shared_ptr<tensorpipe::channel::Context> makeMptChannel() {
   std::vector<std::shared_ptr<tensorpipe::transport::Context>> contexts = {
-    tensorpipe::transport::uv::create(), tensorpipe::transport::uv::create(),
-    tensorpipe::transport::uv::create()};
+    tensorpipe::transport::efa::create()};
   std::vector<std::shared_ptr<tensorpipe::transport::Listener>> listeners = {
-    contexts[0]->listen("127.0.0.1"), contexts[1]->listen("127.0.0.1"),
-    contexts[2]->listen("127.0.0.1")};
+    contexts[0]->listen("127.0.0.1")};
   auto mptChannel = tensorpipe::channel::mpt::create(
     std::move(contexts), std::move(listeners));
   return mptChannel;
