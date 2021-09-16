@@ -76,8 +76,8 @@ std::shared_ptr<tensorpipe::channel::Context> makeMptChannel() {
     tensorpipe::transport::uv::create(), tensorpipe::transport::uv::create(),
     tensorpipe::transport::uv::create()};
   std::vector<std::shared_ptr<tensorpipe::transport::Listener>> listeners = {
-    contexts[0]->listen("127.0.0.1"), contexts[1]->listen("127.0.0.1"),
-    contexts[2]->listen("127.0.0.1")};
+    contexts[0]->listen("0.0.0.0"), contexts[1]->listen("0.0.0.0"),
+    contexts[2]->listen("0.0.0.0")};
   auto mptChannel = tensorpipe::channel::mpt::create(
     std::move(contexts), std::move(listeners));
   return mptChannel;
