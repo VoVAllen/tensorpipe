@@ -75,6 +75,8 @@ std::shared_ptr<tensorpipe::channel::Context> makeMptChannel() {
   std::vector<std::shared_ptr<tensorpipe::transport::Context>> contexts = {
     tensorpipe::transport::uv::create(), tensorpipe::transport::uv::create(),
     tensorpipe::transport::uv::create()};
+   tensorpipe::Error error;
+  std::string result;
   std::tie(error, result) =
           tensorpipe::transport::uv::lookupAddrForHostname();
   std::vector<std::shared_ptr<tensorpipe::transport::Listener>> listeners = {
