@@ -94,7 +94,7 @@ fi_addr_t Reactor::addPeerAddr(EfaAddress& addr) {
 
 void Reactor::removePeerAddr(fi_addr_t faddr) {
   int ret = fi_av_remove(av_.get(), &faddr, 1, 0);
-  TP_CHECK_EFA_RET(ret, "Unable to remove address from endpoint");
+  // TP_CHECK_EFA_RET(ret, "Unable to remove address from endpoint");
 };
 
 int Reactor::postPendingRecvs() {
