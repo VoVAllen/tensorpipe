@@ -185,6 +185,7 @@ void ConnectionImpl::handleEventInFromLoop() {
     // The connection is usable now.
 
     state_ = ESTABLISHED;
+    TP_LOG_WARNING() << "EFA established";
     processWriteOperationsFromLoop();
     // Trigger read operations in case a pair of local read() and remote
     // write() happened before connection is established. Otherwise read()
