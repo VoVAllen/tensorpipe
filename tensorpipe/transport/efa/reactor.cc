@@ -164,12 +164,12 @@ bool Reactor::pollOnce() {
         auto* operation_ptr = static_cast<EFAWriteOperation*>(cq.op_context);
         if (operation_ptr->getLength() == 0) {
           operation_ptr->setCompleted();
-          efaEventHandler_[operation_ptr->getPeerAddr()]->onWriteCompleted();
+          efaEventHandler_[operation_ptr->handlerId]->onWriteCompleted();
         }
       } else if (cq.tag & kPayload) {
         auto* operation_ptr = static_cast<EFAWriteOperation*>(cq.op_context);
         operation_ptr->setCompleted();
-        efaEventHandler_[operation_ptr->getPeerAddr()]->onWriteCompleted();
+        efaEventHandler_[operation_ptr->handlerId]->onWriteCompleted();
       }
     } else if (cq.flags & FI_RECV) {
       // Receive event
@@ -178,7 +178,7 @@ bool Reactor::pollOnce() {
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
         if (operation_ptr->getReadLength() == 0) {
           operation_ptr->setCompleted();
-          efaEventHandler_[src_addr]->onReadCompleted();
+          efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
         } else {
           // operation_ptr->mode_ = EFAReadOperation::Mode::READ_PAYLOAD;
           operation_ptr->allocFromLoop();
@@ -195,7 +195,7 @@ bool Reactor::pollOnce() {
         // Received payload
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
         operation_ptr->setCompleted();
-        efaEventHandler_[src_addr]->onReadCompleted();
+        efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
       }
     }
   }
@@ -210,11 +210,13 @@ bool Reactor::readyToClose() {
 void Reactor::registerHandler(
     fi_addr_t peer_addr,
     std::shared_ptr<efaEventHandler> eventHandler) {
-  efaEventHandler_.emplace(peer_addr, std::move(eventHandler));
+  eventHandler->setReactorId(efaEventHandlerCounter_);
+  efaEventHandler_.emplace(efaEventHandlerCounter_, std::move(eventHandler));
+  efaEventHandlerCounter_++;
 }
 
-void Reactor::unregisterHandler(fi_addr_t peer_addr) {
-  efaEventHandler_.erase(peer_addr);
+void Reactor::unregisterHandler(uint64_t id) {
+  efaEventHandler_.erase(id);
 }
 
 } // namespace efa

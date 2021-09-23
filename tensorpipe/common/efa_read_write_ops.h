@@ -39,9 +39,13 @@ class EFAReadOperation {
   using read_callback_fn =
       std::function<void(const Error& error, const void* ptr, size_t len)>;
 
-  explicit inline EFAReadOperation(read_callback_fn fn);
+  explicit inline EFAReadOperation(read_callback_fn fn, uint64_t handlerId);
 
-  inline EFAReadOperation(void* ptr, size_t length, read_callback_fn fn);
+  inline EFAReadOperation(
+      void* ptr,
+      size_t length,
+      read_callback_fn fn,
+      uint64_t handlerId);
 
   // Called when a buffer is needed to read data from stream.
   inline void allocFromLoop();
@@ -64,6 +68,7 @@ class EFAReadOperation {
 
   // Invoke user callback.
   inline void callbackFromLoop(const Error& error);
+  uint64_t handlerId;
 
  private:
   Mode mode_{WAIT_TO_POST};
@@ -86,13 +91,18 @@ class EFAReadOperation {
   read_callback_fn fn_;
 };
 
-EFAReadOperation::EFAReadOperation(read_callback_fn fn) : fn_(std::move(fn)) {}
+EFAReadOperation::EFAReadOperation(read_callback_fn fn, uint64_t handlerId)
+    : fn_(std::move(fn)), handlerId(handlerId) {}
 
 EFAReadOperation::EFAReadOperation(
     void* ptr,
     size_t length,
-    read_callback_fn fn)
-    : ptr_(static_cast<char*>(ptr)), givenLength_(length), fn_(std::move(fn)) {}
+    read_callback_fn fn,
+    uint64_t handlerId)
+    : ptr_(static_cast<char*>(ptr)),
+      givenLength_(length),
+      fn_(std::move(fn)),
+      handlerId(handlerId) {}
 
 void EFAReadOperation::allocFromLoop() {
   if (givenLength_.has_value()) {
@@ -155,7 +165,8 @@ class EFAWriteOperation {
   inline EFAWriteOperation(
       const void* ptr,
       size_t length,
-      write_callback_fn fn);
+      write_callback_fn fn,
+      uint64_t handlerId);
 
   struct Buf {
     char* base;
@@ -181,6 +192,7 @@ class EFAWriteOperation {
   inline void setPeerAddr(fi_addr_t peer_addr);
   // get length
   inline size_t getLength() const;
+  uint64_t handlerId;
 
  private:
   Mode mode_{WAIT_TO_POST};
@@ -198,8 +210,12 @@ class EFAWriteOperation {
 EFAWriteOperation::EFAWriteOperation(
     const void* ptr,
     size_t length,
-    write_callback_fn fn)
-    : ptr_(static_cast<const char*>(ptr)), length_(length), fn_(std::move(fn)) {
+    write_callback_fn fn,
+    uint64_t handlerId)
+    : ptr_(static_cast<const char*>(ptr)),
+      length_(length),
+      fn_(std::move(fn)),
+      handlerId(handlerId) {
   bufs_[0].base = const_cast<char*>(reinterpret_cast<const char*>(&length_));
   bufs_[0].len = sizeof(length_);
   bufs_[1].base = const_cast<char*>(ptr_);

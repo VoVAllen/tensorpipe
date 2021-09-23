@@ -34,6 +34,8 @@ class efaEventHandler {
 
   virtual void onReadCompleted() = 0;
 
+  virtual void setReactorId(uint64_t id) = 0;
+
   virtual ~efaEventHandler() = default;
 };
 
@@ -124,6 +126,8 @@ class Reactor final : public BusyPollingLoop {
   EfaCompletionQueue cq_;
   EfaAdressVector av_;
   EfaAddress addr_;
+
+  uint64_t efaEventHandlerCounter_ = 0;
 
   int postPendingRecvs();
   int postPendingSends();

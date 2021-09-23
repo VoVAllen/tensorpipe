@@ -67,6 +67,7 @@ class ConnectionImpl final : public ConnectionImplBoilerplate<
   //   void onRemoteConsumedData(uint32_t length) override;
   void onWriteCompleted() override;
   void onReadCompleted() override;
+  void setReactorId(uint64_t id) override;
   //   void onAckCompleted() override;
   // void onError(efaLib::wc_status status, uint64_t wrId) override;
 
@@ -98,6 +99,9 @@ class ConnectionImpl final : public ConnectionImplBoilerplate<
   optional<Sockaddr> sockaddr_;
 
   fi_addr_t peer_addr;
+
+  // id provided by the reactor
+  uint64_t id_ = 0;
 
   uint32_t sendIdx = 0;
 

@@ -91,7 +91,7 @@ void ConnectionImpl::initImplFromLoop() {
 }
 
 void ConnectionImpl::readImplFromLoop(read_callback_fn fn) {
-  readOperations_.emplace_back(std::move(fn));
+  readOperations_.emplace_back(std::move(fn), id_);
 
   processReadOperationsFromLoop();
 }
@@ -100,7 +100,7 @@ void ConnectionImpl::readImplFromLoop(
     void* ptr,
     size_t length,
     read_callback_fn fn) {
-  readOperations_.emplace_back(ptr, length, std::move(fn));
+  readOperations_.emplace_back(ptr, length, std::move(fn), id_);
 
   // If the inbox already contains some data, we may be able to process this
   // operation right away.
@@ -111,7 +111,7 @@ void ConnectionImpl::writeImplFromLoop(
     const void* ptr,
     size_t length,
     write_callback_fn fn) {
-  writeOperations_.emplace_back(ptr, length, std::move(fn));
+  writeOperations_.emplace_back(ptr, length, std::move(fn), id_);
 
   // If the outbox has some free space, we may be able to process this operation
   // right away.
@@ -279,6 +279,10 @@ void ConnectionImpl::onReadCompleted() {
   }
 }
 
+void ConnectionImpl::setReactorId(uint64_t id) {
+  id_ = id;
+}
+
 void ConnectionImpl::processWriteOperationsFromLoop() {
   TP_DCHECK(context_->inLoop());
 
@@ -344,8 +348,8 @@ void ConnectionImpl::handleErrorImpl() {
 void ConnectionImpl::cleanup() {
   TP_DCHECK(context_->inLoop());
   TP_VLOG(8) << "Connection " << id_ << " is cleaning up";
-  context_->getReactor().unregisterHandler(peer_addr);
-  context_->getReactor().removePeerAddr(peer_addr);
+  context_->getReactor().unregisterHandler(id_);
+  // context_->getReactor().removePeerAddr(peer_addr);
 }
 
 } // namespace efa
