@@ -55,6 +55,7 @@ ConnectionImpl::ConnectionImpl(
 
 void ConnectionImpl::initImplFromLoop() {
   context_->enroll(*this);
+  context_->getReactor().registerHandler(-1, shared_from_this());
   Error error;
   // The connection either got a socket or an address, but not both.
 
@@ -182,7 +183,6 @@ void ConnectionImpl::handleEventInFromLoop() {
     peer_addr = context_->getReactor().addPeerAddr(addr);
 
     // The connection is usable now.
-    context_->getReactor().registerHandler(peer_addr, shared_from_this());
 
     state_ = ESTABLISHED;
     processWriteOperationsFromLoop();
