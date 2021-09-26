@@ -26,6 +26,7 @@ Reactor::Reactor(EfaLib efaLib, EfaDeviceList efaDeviceList) {
   av_ = createEfaAdressVector(efaLib, domain_);
   cq_ = createEfaCompletionQueue(efaLib, domain_, device);
   addr_ = enableEndpoint(efaLib, ep_, av_, cq_);
+  TP_LOG_WARNING() << "My efa addr:" << addr_.DebugStr();
   startThread("TP_efa_reactor");
 }
 
