@@ -272,6 +272,7 @@ void ConnectionImpl::onReadCompleted() {
   while (!readOperations_.empty()) {
     EFAReadOperation& readOperation = readOperations_.front();
     if (readOperation.completed()) {
+      TP_LOG_WARNING() << "EFA success callback";
       readOperation.callbackFromLoop(Error::kSuccess);
       readOperations_.pop_front();
     } else {

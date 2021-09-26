@@ -196,6 +196,7 @@ bool Reactor::pollOnce() {
         // Received payload
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
         operation_ptr->setCompleted();
+        TP_LOG_WARNING() << "EFA payload received";
         efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
       }
     }
