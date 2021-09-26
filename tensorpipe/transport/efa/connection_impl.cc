@@ -260,6 +260,8 @@ void ConnectionImpl::onWriteCompleted() {
   while (!writeOperations_.empty()) {
     EFAWriteOperation& writeOperation = writeOperations_.front();
     if (writeOperation.completed()) {
+
+      TP_LOG_WARNING() << "EFA write success finished";
       writeOperation.callbackFromLoop(Error::kSuccess);
       writeOperations_.pop_front();
     } else {

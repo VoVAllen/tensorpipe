@@ -164,11 +164,13 @@ bool Reactor::pollOnce() {
         auto* operation_ptr = static_cast<EFAWriteOperation*>(cq.op_context);
         if (operation_ptr->getLength() == 0) {
           operation_ptr->setCompleted();
+        TP_LOG_WARNING() << "EFA write zero finished";
           efaEventHandler_[operation_ptr->handlerId]->onWriteCompleted();
         }
       } else if (cq.tag & kPayload) {
         auto* operation_ptr = static_cast<EFAWriteOperation*>(cq.op_context);
         operation_ptr->setCompleted();
+        TP_LOG_WARNING() << "EFA write finished to : " << operation_ptr->getPeerAddr();
         efaEventHandler_[operation_ptr->handlerId]->onWriteCompleted();
       }
     } else if (cq.flags & FI_RECV) {
