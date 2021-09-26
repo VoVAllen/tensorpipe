@@ -178,6 +178,7 @@ bool Reactor::pollOnce() {
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
         if (operation_ptr->getReadLength() == 0) {
           operation_ptr->setCompleted();
+          TP_LOG_WARNING() << "Complete zero finished";
           efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
         } else {
           // operation_ptr->mode_ = EFAReadOperation::Mode::READ_PAYLOAD;
@@ -211,6 +212,9 @@ void Reactor::registerHandler(
     fi_addr_t peer_addr,
     std::shared_ptr<efaEventHandler> eventHandler) {
   eventHandler->setReactorId(efaEventHandlerCounter_);
+  if (efaEventHandler_.count(efaEventHandlerCounter_)!=0){
+    TP_THROW_ASSERT() << "Duplicate register";
+  };
   efaEventHandler_.emplace(efaEventHandlerCounter_, std::move(eventHandler));
   efaEventHandlerCounter_++;
 }
