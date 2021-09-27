@@ -198,7 +198,7 @@ void ConnectionImpl::handleEventInFromLoop() {
     // We don't expect to read anything on this socket once the
     // connection has been established. If we do, assume it's a
     // zero-byte read indicating EOF.
-    // setError(TP_CREATE_ERROR(EOFError));
+    setError(TP_CREATE_ERROR(EOFError));
     return;
   }
 
