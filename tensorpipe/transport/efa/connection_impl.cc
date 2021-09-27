@@ -236,7 +236,7 @@ void ConnectionImpl::processReadOperationsFromLoop() {
     return;
   }
 
-  for (int i = readOperations_.size() - 1; i >= 0; i--) {
+  for (int i = 0; i < readOperations_.size(); i++) {
     EFAReadOperation& readOperation = readOperations_[i];
     if (!readOperation.posted()) {
       // context_->getReactor().;
@@ -251,7 +251,7 @@ void ConnectionImpl::processReadOperationsFromLoop() {
     } else {
       // if the operation is posted, all operations back should be posted
       // we can skip more checks
-      break;
+      // break;
     }
   }
 }
@@ -291,7 +291,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
     return;
   }
 
-  for (int i = writeOperations_.size() - 1; i >= 0; i--) {
+  for (int i = 0; i < writeOperations_.size(); i++) {
     EFAWriteOperation& writeOperation = writeOperations_[i];
     if (!writeOperation.posted()) {
       EFAWriteOperation::Buf* buf_array;
@@ -318,7 +318,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
     } else {
       // if the operation is posted, all operations back should be posted
       // we can skip more checks
-      break;
+      // break;
     }
   }
 }
