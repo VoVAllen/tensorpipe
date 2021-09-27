@@ -217,7 +217,6 @@ class EfaDeviceList {
     EfaLib::device* ptr = getEfaDevices(efaLib);
     EfaLib::device* first_ptr = ptr;
     if (ptr == nullptr) {
-      TP_LOG_WARNING() << "Error EFA not avaiable";
       return std::make_tuple(
           TP_CREATE_ERROR(SystemError, "fi_getinfo", -1), EfaDeviceList());
     }

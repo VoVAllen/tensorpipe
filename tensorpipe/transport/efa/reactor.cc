@@ -26,7 +26,6 @@ Reactor::Reactor(EfaLib efaLib, EfaDeviceList efaDeviceList) {
   av_ = createEfaAdressVector(efaLib, domain_);
   cq_ = createEfaCompletionQueue(efaLib, domain_, device);
   addr_ = enableEndpoint(efaLib, ep_, av_, cq_);
-  TP_LOG_WARNING() << "My efa addr:" << addr_.DebugStr();
   startThread("TP_efa_reactor");
 }
 
@@ -165,13 +164,11 @@ bool Reactor::pollOnce() {
         auto* operation_ptr = static_cast<EFAWriteOperation*>(cq.op_context);
         if (operation_ptr->getLength() == 0) {
           operation_ptr->setCompleted();
-        TP_LOG_WARNING() << "EFA write zero finished";
           efaEventHandler_[operation_ptr->handlerId]->onWriteCompleted();
         }
       } else if (cq.tag & kPayload) {
         auto* operation_ptr = static_cast<EFAWriteOperation*>(cq.op_context);
         operation_ptr->setCompleted();
-        TP_LOG_WARNING() << "EFA write finished to : " << operation_ptr->getPeerAddr();
         efaEventHandler_[operation_ptr->handlerId]->onWriteCompleted();
       }
     } else if (cq.flags & FI_RECV) {
@@ -181,7 +178,6 @@ bool Reactor::pollOnce() {
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
         if (operation_ptr->getReadLength() == 0) {
           operation_ptr->setCompleted();
-          TP_LOG_WARNING() << "Complete zero finished";
           efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
         } else {
           // operation_ptr->mode_ = EFAReadOperation::Mode::READ_PAYLOAD;
@@ -199,7 +195,6 @@ bool Reactor::pollOnce() {
         // Received payload
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
         operation_ptr->setCompleted();
-        TP_LOG_WARNING() << "EFA payload received";
         efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
       }
     }
@@ -216,9 +211,6 @@ void Reactor::registerHandler(
     fi_addr_t peer_addr,
     std::shared_ptr<efaEventHandler> eventHandler) {
   eventHandler->setReactorId(efaEventHandlerCounter_);
-  if (efaEventHandler_.count(efaEventHandlerCounter_)!=0){
-    TP_THROW_ASSERT() << "Duplicate register";
-  };
   efaEventHandler_.emplace(efaEventHandlerCounter_, std::move(eventHandler));
   efaEventHandlerCounter_++;
 }
