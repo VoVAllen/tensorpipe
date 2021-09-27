@@ -251,7 +251,7 @@ void ConnectionImpl::processReadOperationsFromLoop() {
     } else {
       // if the operation is posted, all operations back should be posted
       // we can skip more checks
-      break;
+      // break;
     }
   }
 }
@@ -318,7 +318,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
     } else {
       // if the operation is posted, all operations back should be posted
       // we can skip more checks
-      break;
+      // break;
     }
   }
 }
