@@ -107,6 +107,9 @@ EFAReadOperation::EFAReadOperation(
 void EFAReadOperation::allocFromLoop() {
   if (givenLength_.has_value()) {
     TP_DCHECK(ptr_ != nullptr || givenLength_.value() == 0);
+    if (readLength_ != givenLength_.value()) {
+      TP_LOG_WARNING() << "Inconsistent read";
+    }
     TP_DCHECK_EQ(readLength_, givenLength_.value());
   } else {
     TP_DCHECK(ptr_ == nullptr);
