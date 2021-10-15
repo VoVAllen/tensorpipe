@@ -137,6 +137,8 @@ Reactor::~Reactor() {
 }
 
 bool Reactor::pollOnce() {
+  TP_LOG_WARNING() << "I'm polling"; 
+  sleep(1);
   std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cq_entries;
   std::array<fi_addr_t, kNumPolledWorkCompletions> src_addrs;
 
@@ -194,6 +196,14 @@ bool Reactor::pollOnce() {
       } else if (cq.tag & kPayload) {
         // Received payload
         auto* operation_ptr = static_cast<EFAReadOperation*>(cq.op_context);
+        if (msg_idx != efaRecvIdxCount_[operation_ptr->handlerId]){
+          TP_THROW_ASSERT() << "Msg out of order";
+        } else {
+          // if (efaRecvIdxCount_[operation_ptr->handlerId] % 100 == 0){
+          TP_LOG_WARNING() << "I'm counting: " << efaRecvIdxCount_[operation_ptr->handlerId];
+          // }
+        }
+        efaRecvIdxCount_[operation_ptr->handlerId] = efaRecvIdxCount_[operation_ptr->handlerId] + 1;
         operation_ptr->setCompleted();
         efaEventHandler_[operation_ptr->handlerId]->onReadCompleted();
       }

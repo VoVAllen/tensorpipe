@@ -143,6 +143,8 @@ class Reactor final : public BusyPollingLoop {
   // The registered event handlers for each queue pair.
   std::unordered_map<fi_addr_t, std::shared_ptr<efaEventHandler>>
       efaEventHandler_;
+  std::unordered_map<fi_addr_t, uint32_t>
+      efaRecvIdxCount_;
 
   std::deque<EfaEvent> pendingSends_;
   std::deque<EfaEvent> pendingRecvs_;
