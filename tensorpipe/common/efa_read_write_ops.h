@@ -68,9 +68,13 @@ class EFAReadOperation {
 
   // Invoke user callback.
   inline void callbackFromLoop(const Error& error);
-  uint64_t handlerId;
+
+  inline uint64_t getHandlerId() {
+    return handlerId;
+  };
 
  private:
+  uint64_t handlerId;
   Mode mode_{WAIT_TO_POST};
   char* ptr_{nullptr};
 
@@ -195,9 +199,13 @@ class EFAWriteOperation {
   inline void setPeerAddr(fi_addr_t peer_addr);
   // get length
   inline size_t getLength() const;
-  uint64_t handlerId;
+  
+  inline uint64_t getHandlerId() {
+    return handlerId;
+  };
 
- private:
+ private: 
+  uint64_t handlerId;
   Mode mode_{WAIT_TO_POST};
   const char* ptr_;
   const size_t length_;
@@ -219,6 +227,10 @@ EFAWriteOperation::EFAWriteOperation(
       length_(length),
       fn_(std::move(fn)),
       handlerId(handlerId) {
+  if (handlerId == 0){
+    TP_LOG_WARNING() << "weixianweixianweixian";
+    TP_THROW_ASSERT() << "invalid handler id";
+  }
   bufs_[0].base = const_cast<char*>(reinterpret_cast<const char*>(&length_));
   bufs_[0].len = sizeof(length_);
   bufs_[1].base = const_cast<char*>(ptr_);

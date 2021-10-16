@@ -92,7 +92,7 @@ void ConnectionImpl::initImplFromLoop() {
 }
 
 void ConnectionImpl::readImplFromLoop(read_callback_fn fn) {
-  readOperations_.emplace_back(std::move(fn), id_);
+  readOperations_.emplace_back(std::move(fn), (uint64_t)this);
 
   processReadOperationsFromLoop();
 }
@@ -101,7 +101,7 @@ void ConnectionImpl::readImplFromLoop(
     void* ptr,
     size_t length,
     read_callback_fn fn) {
-  readOperations_.emplace_back(ptr, length, std::move(fn), id_);
+  readOperations_.emplace_back(ptr, length, std::move(fn), (uint64_t)this);
 
   // If the inbox already contains some data, we may be able to process this
   // operation right away.
@@ -112,7 +112,7 @@ void ConnectionImpl::writeImplFromLoop(
     const void* ptr,
     size_t length,
     write_callback_fn fn) {
-  writeOperations_.emplace_back(ptr, length, std::move(fn), id_);
+  writeOperations_.emplace_back(ptr, length, std::move(fn), (uint64_t)this);
 
   // If the outbox has some free space, we may be able to process this operation
   // right away.
@@ -186,11 +186,11 @@ void ConnectionImpl::handleEventInFromLoop() {
 
     state_ = ESTABLISHED;
     TP_LOG_WARNING() << "EFA established";
-    processWriteOperationsFromLoop();
     // Trigger read operations in case a pair of local read() and remote
     // write() happened before connection is established. Otherwise read()
     // callback would lose if it's the only read() request.
     processReadOperationsFromLoop();
+    processWriteOperationsFromLoop();
     return;
   }
 
@@ -240,14 +240,24 @@ void ConnectionImpl::processReadOperationsFromLoop() {
     EFAReadOperation& readOperation = readOperations_[i];
     if (!readOperation.posted()) {
       // context_->getReactor().;
+            
+      // TP_LOG_WARNING() << "Post Recv idx: " << recvIdx << "";
+      // context_->getReactor().postRecv(
+      //     readOperation.getLengthPtr(),
+      //     sizeof(size_t),
+      //     kLength,
+      //     peer_addr,
+      //     0xffffffff, // ignore lower bits for msg index
+      //     &readOperation);
       context_->getReactor().postRecv(
           readOperation.getLengthPtr(),
           sizeof(size_t),
-          kLength,
+          kLength | recvIdx,
           peer_addr,
-          0xffffffff, // ignore lower bits for msg index
+          0, // ignore lower bits for msg index
           &readOperation);
       readOperation.setWaitToCompleted();
+      recvIdx++;
     } else {
       // if the operation is posted, all operations back should be posted
       // we can skip more checks
@@ -298,6 +308,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
       size_t size;
       std::tie(buf_array, size) = writeOperation.getBufs();
       writeOperation.setPeerAddr(peer_addr);
+      // TP_LOG_WARNING() << "Send idx: " << sendIdx << " length: " << writeOperation.getLength() << " at: " << &writeOperation;
       // auto size_buf = std::get<0>(writeOperation.getBufs());
       // auto payload_buf = std::get<1>(writeOperation.getBufs());
       context_->getReactor().postSend(
@@ -314,6 +325,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
             peer_addr,
             &writeOperation);
       }
+      writeOperation.setWaitComplete();
       sendIdx++;
     } else {
       // if the operation is posted, all operations back should be posted

@@ -104,6 +104,7 @@ class ConnectionImpl final : public ConnectionImplBoilerplate<
   uint64_t id_ = 0;
 
   uint32_t sendIdx = 0;
+  uint32_t recvIdx = 0;
 
   // Pending read operations.
   std::deque<EFAReadOperation> readOperations_;

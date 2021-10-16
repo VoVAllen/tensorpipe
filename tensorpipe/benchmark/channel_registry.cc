@@ -36,7 +36,12 @@ TP_REGISTER_CREATOR(TensorpipeChannelRegistry, cma, makeCmaChannel);
 // MPT
 
 std::shared_ptr<tensorpipe::channel::Context> makeMptChannel() {
-  throw std::runtime_error("mtp channel requires arguments");
+  std::vector<std::shared_ptr<tensorpipe::transport::Context>> contexts = {
+    tensorpipe::transport::efa::create()};
+  std::vector<std::shared_ptr<tensorpipe::transport::Listener>> listeners = {
+    contexts[0]->listen("127.0.0.1")};
+  return tensorpipe::channel::mpt::create(
+    std::move(contexts), std::move(listeners));
 }
 
 TP_REGISTER_CREATOR(TensorpipeChannelRegistry, mpt, makeMptChannel);
