@@ -30,10 +30,10 @@ endmacro()
 # TODO Add CUDA to this list, in order to fix the TODO below
 
 # TODO: Default to ON if CUDA available.
-option(TP_USE_CUDA "Enable support for CUDA tensors" OFF)
+option(TP_USE_CUDA "Enable support for CUDA tensors" ON)
 
 # Optional features
-option(TP_BUILD_BENCHMARK "Build benchmarks" OFF)
+option(TP_BUILD_BENCHMARK "Build benchmarks" ON)
 option(TP_BUILD_MISC "Build misc tools" OFF)
 option(TP_BUILD_PYTHON "Build python bindings" OFF)
 option(TP_BUILD_TESTING "Build tests" OFF)

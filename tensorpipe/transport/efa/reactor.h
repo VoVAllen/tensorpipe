@@ -88,6 +88,40 @@ class Reactor final : public BusyPollingLoop {
 
   ~Reactor();
 
+  void askForPolling(){
+    count_poll_request++;
+    if (count_poll_request == 1){
+      startPoll();
+    }
+  };
+
+  void askForPause(){
+    count_poll_request--;
+    if (count_poll_request == 0){
+      pausePoll();
+    }
+  };
+
+  void pausePoll(){
+    pause_poll = true;
+  };
+
+  void startPoll(){
+    pause_poll = false;
+    cv.notify_all();
+  };
+
+  void waitPoll(){
+    if (pause_poll){
+      auto ul = std::unique_lock<std::mutex>(lk);
+      cv.wait(ul);
+    }
+  }
+  
+  int count_poll_request = 0;
+  bool pause_poll = false;
+
+
  protected:
   bool pollOnce() override;
 
@@ -100,6 +134,10 @@ class Reactor final : public BusyPollingLoop {
     }
   };
   using EfaEvent = std::unique_ptr<fi_msg_tagged, EfaEventDeleter>;
+
+  std::condition_variable cv;
+  std::mutex lk;
+
 
  private:
   EfaLib efaLib_;

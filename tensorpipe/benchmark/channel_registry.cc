@@ -10,6 +10,7 @@
 
 #include <tensorpipe/tensorpipe.h>
 #include <tensorpipe/tensorpipe_cuda.h>
+#include <tensorpipe/channel/basic/context_impl.h>
 
 TP_DEFINE_SHARED_REGISTRY(
     TensorpipeChannelRegistry,
@@ -23,6 +24,17 @@ std::shared_ptr<tensorpipe::channel::Context> makeBasicChannel() {
 
 TP_REGISTER_CREATOR(TensorpipeChannelRegistry, basic, makeBasicChannel);
 
+
+// std::shared_ptr<tensorpipe::channel::Context> makeBasicEfaChannel() {
+//   auto efaTransport = tensorpipe::transport::efa::create();
+//   return tensorpipe::channel::basic::ContextImpl::createChannel({efaTransport}
+//     , tensorpipe::channel::Endpoint());
+// }
+
+// TP_REGISTER_CREATOR(TensorpipeChannelRegistry, efabasic, makeBasicEfaChannel);
+
+
+
 // CMA
 
 #if TENSORPIPE_HAS_CMA_CHANNEL
@@ -35,11 +47,32 @@ TP_REGISTER_CREATOR(TensorpipeChannelRegistry, cma, makeCmaChannel);
 
 // MPT
 
+
 std::shared_ptr<tensorpipe::channel::Context> makeMptChannel() {
-  throw std::runtime_error("mtp channel requires arguments");
+  std::vector<std::shared_ptr<tensorpipe::transport::Context>> contexts = {
+  tensorpipe::transport::efa::create()};
+  tensorpipe::Error error;
+  std::string result;
+  std::tie(error, result) =
+          tensorpipe::transport::uv::lookupAddrForHostname();
+  std::vector<std::shared_ptr<tensorpipe::transport::Listener>> listeners = {
+    contexts[0]->listen(result)};
+  auto mptChannel = tensorpipe::channel::mpt::create(
+    std::move(contexts), std::move(listeners));
+  return mptChannel;
 }
 
+
 TP_REGISTER_CREATOR(TensorpipeChannelRegistry, mpt, makeMptChannel);
+
+
+// // Efa
+
+// std::shared_ptr<tensorpipe::channel::Context> makeMptChannel() {
+//   throw std::runtime_error("mtp channel requires arguments");
+// }
+
+// TP_REGISTER_CREATOR(TensorpipeChannelRegistry, mpt, makeMptChannel);
 
 // XTH
 

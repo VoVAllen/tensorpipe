@@ -140,6 +140,7 @@ Reactor::~Reactor() {
 }
 
 bool Reactor::pollOnce() {
+  waitPoll();
   std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cqEntries;
   std::array<fi_addr_t, kNumPolledWorkCompletions> srcAddrs;
 

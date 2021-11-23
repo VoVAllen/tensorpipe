@@ -91,6 +91,10 @@ void ConnectionImpl::initImplFromLoop() {
 }
 
 void ConnectionImpl::readImplFromLoop(read_callback_fn fn) {
+
+  if (readOperations_.size() == 0){
+    context_->getReactor().askForPolling();
+  }
   readOperations_.emplace_back(this, std::move(fn));
 
   processReadOperationsFromLoop();
@@ -100,6 +104,9 @@ void ConnectionImpl::readImplFromLoop(
     void* ptr,
     size_t length,
     read_callback_fn fn) {
+  if (readOperations_.size() == 0){
+    context_->getReactor().askForPolling();
+  }
   readOperations_.emplace_back(ptr, length, this, std::move(fn));
 
   // If the inbox already contains some data, we may be able to process this
@@ -111,6 +118,9 @@ void ConnectionImpl::writeImplFromLoop(
     const void* ptr,
     size_t length,
     write_callback_fn fn) {
+  if (writeOperations_.size() == 0){
+    context_->getReactor().askForPolling();
+  }
   writeOperations_.emplace_back(ptr, length, this, std::move(fn));
 
   // If the outbox has some free space, we may be able to process this operation
@@ -264,6 +274,9 @@ void ConnectionImpl::onWriteCompleted() {
       break;
     }
   }
+  if (writeOperations_.empty()){
+    context_->getReactor().askForPause();
+  }
 }
 
 void ConnectionImpl::onReadCompleted() {
@@ -275,6 +288,9 @@ void ConnectionImpl::onReadCompleted() {
     } else {
       break;
     }
+  }
+  if (readOperations_.empty()){
+    context_->getReactor().askForPause();
   }
 }
 
