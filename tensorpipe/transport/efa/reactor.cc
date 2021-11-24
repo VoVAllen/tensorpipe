@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <pthread.h>
+
 #include <tensorpipe/transport/efa/reactor.h>
 
 #include <tensorpipe/common/efa_read_write_ops.h>
@@ -28,6 +30,14 @@ Reactor::Reactor(EfaLib efaLib, EfaDeviceList efaDeviceList) {
   cq_ = createEfaCompletionQueue(efaLib, domain_, device);
   addr_ = enableEndpoint(efaLib, ep_, av_, cq_);
   startThread("TP_efa_reactor");
+  this->deferToLoop([]() {
+    cpu_set_t cpuset;
+    pthread_t thread;
+    thread = pthread_self();
+    CPU_ZERO(&cpuset);
+    CPU_SET(0, &cpuset);
+    pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  });
 }
 
 void Reactor::postSend(
