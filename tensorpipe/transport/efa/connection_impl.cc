@@ -245,6 +245,7 @@ void ConnectionImpl::processReadOperationsFromLoop() {
           0,
           &readOperation);
       readOperation.setWaitToCompleted();
+      TP_LOG_INFO() << "Read add 1";
       context_->getReactor().op_count.fetch_add(1);
       context_->getReactor().cv.notify_all();
       recvIdx_++;
@@ -262,6 +263,7 @@ void ConnectionImpl::onWriteCompleted() {
     if (writeOperation.completed()) {
       writeOperation.callbackFromLoop(Error::kSuccess);
       writeOperations_.pop_front();
+      TP_LOG_INFO() << "Read sub 1";
       context_->getReactor().op_count.fetch_sub(1);
     } else {
       break;
@@ -275,6 +277,7 @@ void ConnectionImpl::onReadCompleted() {
     if (readOperation.completed()) {
       readOperation.callbackFromLoop(Error::kSuccess);
       readOperations_.pop_front();
+      TP_LOG_INFO() << "Read sub 1";
       context_->getReactor().op_count.fetch_sub(1);
     } else {
       break;
@@ -309,6 +312,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
             peerAddr_,
             &writeOperation);
       }
+      TP_LOG_INFO() << "Write add 1";
       context_->getReactor().op_count.fetch_add(1);
       context_->getReactor().cv.notify_all();
       // char tmp_buf{'i'};
