@@ -86,7 +86,7 @@ class Reactor final : public BusyPollingLoop {
 
   void join();
 
-  std::atomic<int32_t> op_count{0};
+  std::atomic<int32_t> op_count{1};
 
   std::mutex lock;
   std::condition_variable cv;
