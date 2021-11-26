@@ -183,6 +183,7 @@ void ConnectionImpl::handleEventInFromLoop() {
 
     // The connection is usable now.
     state_ = ESTABLISHED;
+    context_->getReactor().initialized = true;
     // Trigger read operations in case a pair of local read() and remote
     // write() happened before connection is established. Otherwise read()
     // callback would lose if it's the only read() request.

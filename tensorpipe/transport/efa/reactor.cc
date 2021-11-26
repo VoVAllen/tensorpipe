@@ -142,7 +142,7 @@ Reactor::~Reactor() {
 bool Reactor::pollOnce() {
   if (op_count == 0){
     if (!initialized){
-      initialized = true;
+      
     } else {
       std::unique_lock<std::mutex> lk(lock);
       cv.wait(lk);
