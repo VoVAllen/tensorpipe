@@ -245,6 +245,8 @@ void ConnectionImpl::processReadOperationsFromLoop() {
           0,
           &readOperation);
       readOperation.setWaitToCompleted();
+      context_->getReactor().op_count.fetch_add(1);
+      context_->getReactor().cv.notify_all();
       recvIdx_++;
     } else {
       // if the operation is posted, all operations back should be posted
@@ -260,6 +262,7 @@ void ConnectionImpl::onWriteCompleted() {
     if (writeOperation.completed()) {
       writeOperation.callbackFromLoop(Error::kSuccess);
       writeOperations_.pop_front();
+      context_->getReactor().op_count.fetch_sub(1);
     } else {
       break;
     }
@@ -272,6 +275,7 @@ void ConnectionImpl::onReadCompleted() {
     if (readOperation.completed()) {
       readOperation.callbackFromLoop(Error::kSuccess);
       readOperations_.pop_front();
+      context_->getReactor().op_count.fetch_sub(1);
     } else {
       break;
     }
@@ -305,6 +309,10 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
             peerAddr_,
             &writeOperation);
       }
+      context_->getReactor().op_count.fetch_add(1);
+      context_->getReactor().cv.notify_all();
+      // char tmp_buf{'i'};
+      // socket_.write(&tmp_buf, sizeof(tmp_buf));
       writeOperation.setWaitComplete();
       sendIdx_++;
     } else {

@@ -86,6 +86,11 @@ class Reactor final : public BusyPollingLoop {
 
   void join();
 
+  std::atomic<int32_t> op_count{0};
+
+  std::mutex lock;
+  std::condition_variable cv;
+
   ~Reactor();
 
  protected:
@@ -100,6 +105,7 @@ class Reactor final : public BusyPollingLoop {
     }
   };
   using EfaEvent = std::unique_ptr<fi_msg_tagged, EfaEventDeleter>;
+
 
  private:
   EfaLib efaLib_;

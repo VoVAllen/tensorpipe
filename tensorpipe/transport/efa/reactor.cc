@@ -140,6 +140,10 @@ Reactor::~Reactor() {
 }
 
 bool Reactor::pollOnce() {
+  if (op_count == 0){
+    std::unique_lock<std::mutex> lk(lock);
+    cv.wait(lk);
+  }
   std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cqEntries;
   std::array<fi_addr_t, kNumPolledWorkCompletions> srcAddrs;
 
