@@ -28,7 +28,6 @@ Reactor::Reactor(EfaLib efaLib, EfaDeviceList efaDeviceList) {
   cq_ = createEfaCompletionQueue(efaLib, domain_, device);
   addr_ = enableEndpoint(efaLib, ep_, av_, cq_);
   startThread("TP_efa_reactor");
-  wakeupEventLoopToDeferFunction();
 }
 
 void Reactor::postSend(
@@ -142,7 +141,7 @@ Reactor::~Reactor() {
 
 bool Reactor::pollOnce() {
   // TP_LOG_WARNING() << "PO" << inLoop();
-  pausePolling();
+  // pausePolling();
   std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cqEntries;
   std::array<fi_addr_t, kNumPolledWorkCompletions> srcAddrs;
 
@@ -209,8 +208,7 @@ bool Reactor::pollOnce() {
       }
     }
   }
-
-  return rv!=0;
+  return true;
 }
 
 bool Reactor::readyToClose() {

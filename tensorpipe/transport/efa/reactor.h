@@ -95,25 +95,42 @@ class Reactor final : public BusyPollingLoop {
   };
 
   inline void decCount() {
+    std::lock_guard<std::mutex> lk(m);
     op_count.fetch_sub(1);
   };
 
   inline void pausePolling() {
-    if (op_count == 0) {
-      std::unique_lock<std::mutex> lk(m);
-      if (op_count == 0) {
-        cv.wait(lk);
-      }
-    }
+    // if (op_count == 0) {
+      // std::unique_lock<std::mutex> lk(m);
+      // if (op_count == 0) {
+      //   // TP_LOG_WARNING() << "Pause polling";
+      //   cv.wait(lk);
+      //   // TP_LOG_WARNING() << "Resume polling";
+      // }
+    // }
   };
-
 
   ~Reactor();
 
  protected:
   void wakeupEventLoopToDeferFunction() override {
-    BusyPollingLoop::wakeupEventLoopToDeferFunction();
+    ++deferredFunctionCount_;
     cv.notify_all();
+  }
+
+  void eventLoop() override {
+    while (!closed_ || !readyToClose()) {
+      if (pollOnce()) {
+        // continue
+      } else if (deferredFunctionCount_ > 0) {
+        // TP_LOG_WARNING() << "Run deferred functions";
+        deferredFunctionCount_ -= runDeferredFunctionsFromEventLoop();
+      } else {
+
+        pausePolling();
+        // std::this_thread::yield();
+      }
+    }
   }
 
   bool pollOnce() override;
@@ -146,6 +163,8 @@ class Reactor final : public BusyPollingLoop {
 
   std::atomic<bool> closed_{false};
   std::atomic<bool> joined_{false};
+
+  std::atomic<int64_t> deferredFunctionCount_{0};
 
   // An identifier for the context, composed of the identifier for the context,
   // combined with the transport's name. It will only be used for logging and
