@@ -35,36 +35,52 @@ static const int FABRIC_VERSION = FI_VERSION(1, 10);
 
 struct FabricDeleter {
   void operator()(fi_info* info) {
-    if (info)
+    if (info) {
       efaLib->fi_freeinfo_op(info);
+      // delete info;
+    }
   }
   void operator()(fid* fid) {
-    if (fid)
+    if (fid) {
       fi_close(fid);
+      // delete fid;
+    }
   }
   void operator()(fid_domain* fid) {
-    if (fid)
+    if (fid) {
       fi_close((fid_t)fid);
+      // delete fid;
+    }
   }
   void operator()(fid_fabric* fid) {
-    if (fid)
+    if (fid) {
       fi_close((fid_t)fid);
+      // delete fid;
+    }
   }
   void operator()(fid_cq* fid) {
-    if (fid)
+    if (fid) {
       fi_close((fid_t)fid);
+      // delete fid;
+    }
   }
   void operator()(fid_av* fid) {
-    if (fid)
+    if (fid) {
       fi_close((fid_t)fid);
+      // delete fid;
+    }
   }
   void operator()(fid_ep* fid) {
-    if (fid)
+    if (fid) {
       fi_close((fid_t)fid);
+      // delete fid;
+    }
   }
   void operator()(fid_eq* fid) {
-    if (fid)
+    if (fid) {
       fi_close((fid_t)fid);
+      // delete fid;
+    }
   }
 
   EfaLib* efaLib;
@@ -104,6 +120,7 @@ struct EfaAddress {
   }
 };
 
+using EfaDevice = UniqueFabricPtr<struct fi_info>;
 inline EfaLib::device* getEfaDevices(EfaLib& efaLib) {
   EfaLib::device* hints = efaLib.fi_dupinfo_op((const fi_info*)NULL);
   hints->mode = FI_CONTEXT;
@@ -122,6 +139,7 @@ inline EfaLib::device* getEfaDevices(EfaLib& efaLib) {
   struct fi_info* info_;
   int ret =
       efaLib.fi_getinfo_op(FABRIC_VERSION, nullptr, nullptr, 0, hints, &info_);
+  efaLib.fi_freeinfo_op(hints);
   return info_;
 }
 

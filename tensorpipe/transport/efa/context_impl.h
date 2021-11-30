@@ -24,18 +24,6 @@ namespace efa {
 class ConnectionImpl;
 class ListenerImpl;
 
-
-class NaiveExecutor : public DeferredExecutor {
- public:
-  bool inLoop() const override {
-    return true;
-  }
-
-  void deferToLoop(TTask fn) override {
-    fn();
-  }
-};
-
 class ContextImpl final
     : public ContextImplBoilerplate<ContextImpl, ListenerImpl, ConnectionImpl> {
  public:
@@ -64,8 +52,7 @@ class ContextImpl final
 
  private:
   Reactor reactor_;
-  NaiveExecutor naive_executor_;
-  EpollLoop loop_{naive_executor_};
+  EpollLoop loop_{this->reactor_};
 };
 
 } // namespace efa

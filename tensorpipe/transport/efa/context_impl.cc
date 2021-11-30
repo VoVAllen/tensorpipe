@@ -62,7 +62,6 @@ std::shared_ptr<ContextImpl> ContextImpl::create() {
 ContextImpl::ContextImpl(EfaLib efaLib, EfaDeviceList deviceList)
     : ContextImplBoilerplate<ContextImpl, ListenerImpl, ConnectionImpl>(
           generateDomainDescriptor()),
-      naive_executor_(),
       reactor_(std::move(efaLib), std::move(deviceList)) {}
 
 void ContextImpl::handleErrorImpl() {
@@ -76,8 +75,7 @@ void ContextImpl::joinImpl() {
 }
 
 bool ContextImpl::inLoop() const {
-  // return reactor_.inLoop();
-  return true;
+  return reactor_.inLoop();
 };
 
 void ContextImpl::deferToLoop(std::function<void()> fn) {

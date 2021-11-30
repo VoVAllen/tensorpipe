@@ -27,6 +27,7 @@ Reactor::Reactor(EfaLib efaLib, EfaDeviceList efaDeviceList) {
   av_ = createEfaAdressVector(efaLib, domain_);
   cq_ = createEfaCompletionQueue(efaLib, domain_, device);
   addr_ = enableEndpoint(efaLib, ep_, av_, cq_);
+  efaDeviceList.reset();
   startThread("TP_efa_reactor");
 }
 
@@ -36,7 +37,7 @@ void Reactor::postSend(
     uint64_t tag,
     fi_addr_t peerAddr,
     void* context) {
-  pendingSends_.emplace_back(EfaEvent((new fi_msg_tagged{
+  pendingSends_.emplace_back(new fi_msg_tagged{
       /* msg_iov */ new iovec{.iov_base = buffer, .iov_len = size},
       /* desc */ 0,
       /* iov_count */ 1,
@@ -44,7 +45,7 @@ void Reactor::postSend(
       /* tag */ tag,
       /* ignore */ 0,
       /* context */ context,
-      /* data */ 0})));
+      /* data */ 0});
   postPendingRecvs();
 }
 
@@ -55,7 +56,7 @@ void Reactor::postRecv(
     fi_addr_t peerAddr,
     uint64_t ignore,
     void* context) {
-  pendingRecvs_.emplace_back(EfaEvent(new fi_msg_tagged{
+  pendingRecvs_.emplace_back(new fi_msg_tagged{
       /* msg_iov */ new iovec{.iov_base = buffer, .iov_len = size},
       /* desc */ 0,
       /* iov_count */ 1,
@@ -63,7 +64,7 @@ void Reactor::postRecv(
       /* tag */ tag,
       /* ignore */ ignore,
       /* context */ context,
-      /* data */ 0}));
+      /* data */ 0});
   postPendingRecvs();
 }
 

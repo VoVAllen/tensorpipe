@@ -141,6 +141,7 @@ class Reactor final : public BusyPollingLoop {
    public:
     void operator()(fi_msg_tagged* msg) {
       delete msg->msg_iov;
+      delete msg;
     }
   };
   using EfaEvent = std::unique_ptr<fi_msg_tagged, EfaEventDeleter>;
