@@ -28,6 +28,7 @@ Reactor::Reactor(EfaLib efaLib, EfaDeviceList efaDeviceList) {
   cq_ = createEfaCompletionQueue(efaLib, domain_, device);
   addr_ = enableEndpoint(efaLib, ep_, av_, cq_);
   startThread("TP_efa_reactor");
+  wakeupEventLoopToDeferFunction();
 }
 
 void Reactor::postSend(
@@ -96,7 +97,7 @@ fi_addr_t Reactor::addPeerAddr(EfaAddress& addr) {
 
 void Reactor::removePeerAddr(fi_addr_t faddr) {
   int ret = fi_av_remove(av_.get(), &faddr, 1, 0);
-  TP_CHECK_EFA_RET(ret, "Unable to remove address from endpoint");
+  // TP_CHECK_EFA_RET(ret, "Unable to remove address from endpoint");
   efaAddrSet_.erase(faddr);
 };
 
@@ -140,14 +141,8 @@ Reactor::~Reactor() {
 }
 
 bool Reactor::pollOnce() {
-  if (op_count == 0){
-    if (!initialized){
-      
-    } else {
-      std::unique_lock<std::mutex> lk(lock);
-      cv.wait(lk);
-    }
-  }
+  // TP_LOG_WARNING() << "PO" << inLoop();
+  pausePolling();
   std::array<struct fi_cq_tagged_entry, kNumPolledWorkCompletions> cqEntries;
   std::array<fi_addr_t, kNumPolledWorkCompletions> srcAddrs;
 
@@ -215,7 +210,7 @@ bool Reactor::pollOnce() {
     }
   }
 
-  return true;
+  return rv!=0;
 }
 
 bool Reactor::readyToClose() {

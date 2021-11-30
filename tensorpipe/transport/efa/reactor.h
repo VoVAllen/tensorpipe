@@ -86,15 +86,36 @@ class Reactor final : public BusyPollingLoop {
 
   void join();
 
-  std::atomic<int32_t> op_count{0};
-  bool initialized{false};
+  inline void incCount(int size) {
+    {
+      std::lock_guard<std::mutex> lk(m);
+      op_count.fetch_add(size);
+    }
+    cv.notify_all();
+  };
 
-  std::mutex lock;
-  std::condition_variable cv;
+  inline void decCount() {
+    op_count.fetch_sub(1);
+  };
+
+  inline void pausePolling() {
+    if (op_count == 0) {
+      std::unique_lock<std::mutex> lk(m);
+      if (op_count == 0) {
+        cv.wait(lk);
+      }
+    }
+  };
+
 
   ~Reactor();
 
  protected:
+  void wakeupEventLoopToDeferFunction() override {
+    BusyPollingLoop::wakeupEventLoopToDeferFunction();
+    cv.notify_all();
+  }
+
   bool pollOnce() override;
 
   bool readyToClose() override;
@@ -107,7 +128,6 @@ class Reactor final : public BusyPollingLoop {
   };
   using EfaEvent = std::unique_ptr<fi_msg_tagged, EfaEventDeleter>;
 
-
  private:
   EfaLib efaLib_;
   EfaFabric fabric_;
@@ -116,6 +136,10 @@ class Reactor final : public BusyPollingLoop {
   EfaCompletionQueue cq_;
   EfaAdressVector av_;
   EfaAddress addr_;
+
+  std::atomic<int32_t> op_count{0};
+  std::mutex m;
+  std::condition_variable cv;
 
   int postPendingRecvs();
   int postPendingSends();

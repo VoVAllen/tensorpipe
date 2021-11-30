@@ -122,7 +122,7 @@ void ConnectionImpl::handleEventsFromLoop(int events) {
   TP_DCHECK(context_->inLoop());
   TP_VLOG(9) << "Connection " << id_ << " is handling an event on its socket ("
              << EpollLoop::formatEpollEvents(events) << ")";
-
+  
   // Handle only one of the events in the mask. Events on the control
   // file descriptor are rare enough for the cost of having epoll call
   // into this function multiple times to not matter. The benefit is
@@ -183,8 +183,8 @@ void ConnectionImpl::handleEventInFromLoop() {
 
     // The connection is usable now.
     state_ = ESTABLISHED;
-    TP_LOG_WARNING() << "Initialized";
-    context_->getReactor().initialized = true;
+    // TP_LOG_WARNING() << "Initialized";
+    // context_->getReactor().initialized = true;
     // Trigger read operations in case a pair of local read() and remote
     // write() happened before connection is established. Otherwise read()
     // callback would lose if it's the only read() request.
@@ -194,10 +194,9 @@ void ConnectionImpl::handleEventInFromLoop() {
   }
 
   if (state_ == ESTABLISHED) {
-    // We don't expect to read anything on this socket once the
-    // connection has been established. If we do, assume it's a
-    // zero-byte read indicating EOF.
-    setError(TP_CREATE_ERROR(EOFError));
+    char message[64];
+    auto size = socket_.read(&message, sizeof(message));
+    context_->getReactor().incCount(size);
     return;
   }
 
@@ -247,9 +246,7 @@ void ConnectionImpl::processReadOperationsFromLoop() {
           0,
           &readOperation);
       readOperation.setWaitToCompleted();
-      TP_LOG_WARNING() << "Read add 1";
-      context_->getReactor().op_count.fetch_add(1);
-      context_->getReactor().cv.notify_all();
+      context_->getReactor().incCount(1);
       recvIdx_++;
     } else {
       // if the operation is posted, all operations back should be posted
@@ -265,8 +262,7 @@ void ConnectionImpl::onWriteCompleted() {
     if (writeOperation.completed()) {
       writeOperation.callbackFromLoop(Error::kSuccess);
       writeOperations_.pop_front();
-      TP_LOG_WARNING() << "Read sub 1";
-      context_->getReactor().op_count.fetch_sub(1);
+      context_->getReactor().decCount();
     } else {
       break;
     }
@@ -279,8 +275,7 @@ void ConnectionImpl::onReadCompleted() {
     if (readOperation.completed()) {
       readOperation.callbackFromLoop(Error::kSuccess);
       readOperations_.pop_front();
-      TP_LOG_WARNING() << "Read sub 1";
-      context_->getReactor().op_count.fetch_sub(1);
+      context_->getReactor().decCount();
     } else {
       break;
     }
@@ -314,11 +309,9 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
             peerAddr_,
             &writeOperation);
       }
-      TP_LOG_WARNING() << "Write add 1";
-      context_->getReactor().op_count.fetch_add(1);
-      context_->getReactor().cv.notify_all();
-      // char tmp_buf{'i'};
-      // socket_.write(&tmp_buf, sizeof(tmp_buf));
+      context_->getReactor().incCount(1);
+      char tmp_buf{'i'};
+      auto ret = socket_.write(&tmp_buf, sizeof(tmp_buf));
       writeOperation.setWaitComplete();
       sendIdx_++;
     } else {
