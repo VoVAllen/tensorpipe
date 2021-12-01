@@ -87,27 +87,21 @@ class Reactor final : public BusyPollingLoop {
   void join();
 
   inline void incCount(int size) {
-    {
-      std::lock_guard<std::mutex> lk(m);
-      op_count.fetch_add(size);
-    }
+    op_count.fetch_add(size);
     cv.notify_all();
   };
 
   inline void decCount() {
-    std::lock_guard<std::mutex> lk(m);
     op_count.fetch_sub(1);
   };
 
   inline void pausePolling() {
-    // if (op_count == 0) {
-      // std::unique_lock<std::mutex> lk(m);
-      // if (op_count == 0) {
-      //   // TP_LOG_WARNING() << "Pause polling";
-      //   cv.wait(lk);
-      //   // TP_LOG_WARNING() << "Resume polling";
-      // }
-    // }
+    if (op_count == 0) {
+      std::unique_lock<std::mutex> lk(m);
+      cv.wait(lk, [this]() {
+        return (op_count != 0 | deferredFunctionCount_ != 0 | closed_);
+      });
+    }
   };
 
   ~Reactor();
@@ -122,13 +116,11 @@ class Reactor final : public BusyPollingLoop {
     while (!closed_ || !readyToClose()) {
       if (pollOnce()) {
         // continue
-      } else if (deferredFunctionCount_ > 0) {
-        // TP_LOG_WARNING() << "Run deferred functions";
-        deferredFunctionCount_ -= runDeferredFunctionsFromEventLoop();
       } else {
-
+        if (deferredFunctionCount_ > 0) {
+          deferredFunctionCount_ -= runDeferredFunctionsFromEventLoop();
+        }
         pausePolling();
-        // std::this_thread::yield();
       }
     }
   }

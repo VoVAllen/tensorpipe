@@ -46,7 +46,7 @@ void Reactor::postSend(
       /* ignore */ 0,
       /* context */ context,
       /* data */ 0});
-  postPendingRecvs();
+  postPendingSends();
 }
 
 void Reactor::postRecv(

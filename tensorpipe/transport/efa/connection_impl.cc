@@ -194,9 +194,9 @@ void ConnectionImpl::handleEventInFromLoop() {
   }
 
   if (state_ == ESTABLISHED) {
-    // char message[64];
-    // auto size = socket_.read(&message, sizeof(message));
-    // context_->getReactor().incCount(size);
+    char message[64];
+    auto size = socket_.read(&message, sizeof(message));
+    context_->getReactor().incCount(size);
     return;
   }
 
@@ -310,8 +310,9 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
             &writeOperation);
       }
       context_->getReactor().incCount(1);
-      // char tmp_buf{'i'};
-      // auto ret = socket_.write(&tmp_buf, sizeof(tmp_buf));
+      char tmp_buf{'i'};
+      auto ret = socket_.write(&tmp_buf, sizeof(tmp_buf));
+      // TP_LOG_WARNING() << "Socket write";
       // if (ret != 1){
       //   TP_THROW_ASSERT() << "Should be one";
       // }
