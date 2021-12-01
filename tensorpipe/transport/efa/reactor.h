@@ -87,20 +87,24 @@ class Reactor final : public BusyPollingLoop {
   void join();
 
   inline void incCount(int size) {
+    TP_LOG_WARNING() << "Inc from " << op_count << " by " << size;
     op_count.fetch_add(size);
     cv.notify_all();
   };
 
   inline void decCount() {
+    TP_LOG_WARNING() << "Dec from " << op_count << " by " << 1;
     op_count.fetch_sub(1);
   };
 
   inline void pausePolling() {
     if (op_count == 0) {
       std::unique_lock<std::mutex> lk(m);
-      cv.wait(lk, [this]() {
-        return (op_count != 0 | deferredFunctionCount_ != 0 | closed_);
+      TP_LOG_WARNING() << "Pause thread: " << ((op_count != 0) || (deferredFunctionCount_ != 0) || closed_);
+      cv.wait(lk, [this](){
+        return ((op_count != 0) || (deferredFunctionCount_ != 0) || closed_);
       });
+      TP_LOG_WARNING() << "Resume thread";
     }
   };
 

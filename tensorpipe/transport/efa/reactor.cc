@@ -71,6 +71,7 @@ void Reactor::postRecv(
 int Reactor::postPendingSends() {
   while (!pendingSends_.empty()) {
     fi_msg_tagged* sevent = pendingSends_.front().get();
+    TP_LOG_WARNING() << "Send tag: " << sevent->tag << " size: " << sevent->msg_iov->iov_len;
     int ret = fi_tsendmsg(ep_.get(), sevent, 0);
     if (ret == 0) {
       // Send successfully, pop out events
@@ -96,7 +97,7 @@ fi_addr_t Reactor::addPeerAddr(EfaAddress& addr) {
 }
 
 void Reactor::removePeerAddr(fi_addr_t faddr) {
-  int ret = fi_av_remove(av_.get(), &faddr, 1, 0);
+  // int ret = fi_av_remove(av_.get(), &faddr, 1, 0);
   // TP_CHECK_EFA_RET(ret, "Unable to remove address from endpoint");
   efaAddrSet_.erase(faddr);
 };
@@ -165,6 +166,7 @@ bool Reactor::pollOnce() {
     uint32_t msgIdx = static_cast<uint32_t>(cq.tag);
     if (cq.flags & FI_SEND) {
       // Send event
+      TP_LOG_WARNING() << "Complete Send tag: " << cq.tag << " size: " << cq.len;
       if (cq.tag & kLength) {
         // Send size finished, check whether it's zero sized message
         auto* operationPtr = static_cast<EFAWriteOperation*>(cq.op_context);
@@ -180,6 +182,8 @@ bool Reactor::pollOnce() {
             ->onWriteCompleted();
       }
     } else if (cq.flags & FI_RECV) {
+
+      TP_LOG_WARNING() << "Complete Recv tag: " << cq.tag << " size: " << cq.len;
       // Receive event
       if (cq.tag & kLength) {
         // Received length information

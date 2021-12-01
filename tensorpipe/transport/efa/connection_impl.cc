@@ -196,6 +196,10 @@ void ConnectionImpl::handleEventInFromLoop() {
   if (state_ == ESTABLISHED) {
     char message[64];
     auto size = socket_.read(&message, sizeof(message));
+    TP_LOG_WARNING() << this << "Read socket: " << size;
+    if (size == 0) {
+      TP_THROW_ASSERT() << "Error";
+    }
     context_->getReactor().incCount(size);
     return;
   }
@@ -246,7 +250,7 @@ void ConnectionImpl::processReadOperationsFromLoop() {
           0,
           &readOperation);
       readOperation.setWaitToCompleted();
-      // context_->getReactor().incCount(1);
+      context_->getReactor().incCount(1);
       recvIdx_++;
     } else {
       // if the operation is posted, all operations back should be posted
@@ -286,6 +290,7 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
   TP_DCHECK(context_->inLoop());
 
   if (state_ != ESTABLISHED) {
+    TP_LOG_WARNING() << "not ready";
     return;
   }
 
@@ -310,7 +315,9 @@ void ConnectionImpl::processWriteOperationsFromLoop() {
             &writeOperation);
       }
       context_->getReactor().incCount(1);
+      TP_LOG_WARNING() << this << "write inc count";
       char tmp_buf{'i'};
+      TP_LOG_WARNING() << this << "Write socket";
       auto ret = socket_.write(&tmp_buf, sizeof(tmp_buf));
       // TP_LOG_WARNING() << "Socket write";
       // if (ret != 1){
